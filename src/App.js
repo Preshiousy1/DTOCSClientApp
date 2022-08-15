@@ -54,6 +54,26 @@ export default function App() {
   const [days, setDays] = useState(0)
   const [endDate, setEndDate] = useState('')
 
+  const [loading, setLoading] = useState(false)
+  const [processing, setProcessing] = useState(false)
+  const [sending, setSending] = useState(false)
+  const [alert, setAlert] = useState(null)
+  const [fileDestination, setfileDestination] = useState("")
+  const [file, setFile] = useState(null)
+
+  // This state will store the parsed data
+  const [coldata, setData] = useState([]);
+  const [error, setError] = useState("");
+
+  const [options, setOptions] = useState([])
+  const [defaultoptions, setDefaultOptions] = useState([])
+  const [selectedoptions, setSelectedOptions] = useState([])
+  const [saved, setSaved] = useState(false)
+  const { control, handleSubmit } = useForm();
+
+  const [stickyTableData, setStickyTableData] = useState([])
+  const [columns, setColumns] = useState([])
+
   const handleDateChange = (newValue) => {
     setDate(newValue);
     const dateS = moment(newValue).format("MM-DD-YYYY")
@@ -64,34 +84,6 @@ export default function App() {
     if (event == "") event = 0
     setDays(event)
   }
-
-  useEffect(() => {
-    console.log("Date String", dateString)
-    if (dateString != "" && days != 0) getScheduleEnd()
-  }, [days, dateString])
-
-  useEffect(() => {
-    const dateS = moment(date).format("MM-DD-YYYY")
-    setDateSring(dateS)
-  }, [])
-
-  const [loading, setLoading] = useState(false)
-  const [processing, setProcessing] = useState(false)
-  const [alert, setAlert] = useState(null)
-  const [fileDestination, setfileDestination] = useState("")
-  const [file, setFile] = useState(null)
-
-  // This state will store the parsed data
-  const [coldata, setData] = useState([]);
-
-  // It state will contain the error when
-  // correct file extension is not used
-  const [error, setError] = useState("");
-
-  const [options, setOptions] = useState([])
-  const [defaultoptions, setDefaultOptions] = useState([])
-  const [selectedoptions, setSelectedOptions] = useState([])
-  const [saved, setSaved] = useState(false)
 
   const defaultColumns = [
     'ID',
@@ -117,20 +109,57 @@ export default function App() {
 
   ]
 
-  const getScheduleEnd = () => {
-
-    console.log("Date String", dateString)
-    console.log("Days", days)
-
-    const end = moment(moment(date).add(days, 'days')).format("LL")
-    setEndDate(end)
-
+  const defaultRenames = {
+    'Duration hours': "duration",
+    'GANANCIA TOTAL ($)': "profit",
+    'DESARROLLO (m) BASAL': "prim_dev",
+    'DESARROLLO (m) ESTERIL': "waste_dev",
+    'DESARROLLO (m) RAMPA': "ramp_dev",
+    'LVL_BACKFILL': "lvl_backfill",
+    'LVL_DEVELOPMENT (m)': "lvl_dev",
+    'LVL_EXTRACCION_MINERAL (Tn)': "lvl_ore_t",
+    'DE METROS PERFORADOS (m)': "production_drill",
+    'Predecessor details': "preds",
+    'SOT_ACT_TYPE': "act_type_brd",
+    'ID_LABOR': "act_type",
+    'Start': "start",
+    'Finish': "finish",
+    'NIVEL': "Level",
+    'Rate': "rate",
+    'Driving property': "d_prop",
+    'RESBIN': "min_reserve",
+    'Resources': "resources"
   }
 
-  const { control, handleSubmit } = useForm();
+  const defaultDatatypes = {
+    'ID': 'str',
+    'Duration hours': 'float',
+    'GANANCIA TOTAL ($)': 'float',
+    'Start': 'str',
+    'DESARROLLO (m) ESTERIL': 'float',
+    'DESARROLLO (m) RAMPA': 'float',
+    'DESARROLLO (m) BASAL': 'float',
+    'LVL_BACKFILL': 'float',
+    'LVL_DEVELOPMENT (m)': 'float',
+    'LVL_EXTRACCION_MINERAL (Tn)': 'float',
+    'DE METROS PERFORADOS (m)': 'float',
+    'Predecessor details': 'str',
+    'Finish': 'str',
+    'Rate': 'str',
+    'NIVEL': 'str',
+    'SOT_ACT_TYPE': 'str',
+    'ID_LABOR': 'str',
+    'Driving property': 'str',
+    'RESBIN': 'str',
+    'Resources': 'str'
+  }
+
+  const getScheduleEnd = () => {
+    const end = moment(moment(date).add(days, 'days')).format("LL")
+    setEndDate(end)
+  }
 
   const onSubmit = ({ file }) => {
-
 
     console.log("File ", file)
 
@@ -175,10 +204,7 @@ export default function App() {
       .catch(error => { console.log(error); setLoading(false); setAlert(false) });
   };
 
-
   const processData = () => {
-
-
 
     // If user clicks the parse button without
     // a file we show a error
@@ -200,6 +226,86 @@ export default function App() {
 
   };
 
+  const setTableValues = () => {
+    const tableData = []
+    const cols = []
+    selectedoptions.forEach((col, index) => {
+
+      tableData.push({ name: col.value, rename: defaultRenames[col.value] || '', datatype: defaultDatatypes[col.value] })
+      cols.push(col.value)
+    })
+
+    setStickyTableData(tableData)
+    setColumns(cols)
+  }
+
+  const sendData = () => {
+    const colToDatatype = {}
+    const colToRename = {}
+    if (dateString == '' || days < 1) {
+      window.alert("Please set a schedule first")
+      return;
+    }
+
+    setSending(true)
+
+    stickyTableData.forEach((data, index) => {
+      colToDatatype[data.name] = data.datatype
+      colToRename[data.name] = data.rename
+    })
+
+    window.alert("Coming Soon")
+    return
+
+    fetch(
+      '/send_data',
+      {
+        method: "POST",
+        headers: new Headers({
+          "Content-Type": "application/json",
+        }),
+        body: JSON.stringify({
+          rename: colToRename,
+          datatype: colToDatatype,
+          columns: columns,
+          date: dateString,
+          days: days,
+          destination: fileDestination
+
+        })
+      }
+    )
+      .then(res => res.json())
+      .then(response => {
+
+        console.log("Response : ", response)
+        setSending(false)
+
+
+      })
+      .catch(error => { console.log(error); setSending(false); });
+
+  }
+
+  useEffect(() => {
+    if (stickyTableData.length > 0)
+      setSaved(true)
+  }, [stickyTableData])
+
+  const handleTableDataChange = (data, index) => {
+    let newTableData = [...stickyTableData]
+    newTableData[index] = data
+    setStickyTableData(newTableData)
+  }
+
+  useEffect(() => {
+    if (dateString != "" && days != 0) getScheduleEnd()
+  }, [days, dateString])
+
+  useEffect(() => {
+    const dateS = moment(date).format("MM-DD-YYYY")
+    setDateSring(dateS)
+  }, [])
 
   useEffect(() => {
     if (fileDestination != '')
@@ -207,10 +313,11 @@ export default function App() {
   }, [fileDestination])
 
   useEffect(() => {
-    setProcessing(true)
 
     console.log("Col data :", coldata)
     if (coldata.length > 0) {
+      setProcessing(true)
+
       const obj = [];
       const defaults = [];
       coldata.forEach((element, index) => {
@@ -242,13 +349,6 @@ export default function App() {
     console.log("Defaults", defaultoptions)
   }, [defaultoptions])
 
-
-
-  // const options = [
-  //   { value: 'chocolate', label: 'Chocolate' },
-  //   { value: 'strawberry', label: 'Strawberry' },
-  //   { value: 'vanilla', label: 'Vanilla' }
-  // ]
   const animatedComponents = makeAnimated();
 
   return (
@@ -373,14 +473,15 @@ export default function App() {
                     <Typography>Processing Data...</Typography>
                     :
                     <div >
-                      <Typography component="h4" variant="h5" align="left" marginBottom={2}>
+                      <hr color='primary' />
+                      <Typography variant="h5" align='center' fontWeight={800} style={{ marginTop: 50, marginBottom: 50 }}>
                         Data Filtering
                       </Typography>
 
                       {error ? error :
                         options.length < 1 ?
                           ""
-                          : <>
+                          : <Box style={{ margin: 30 }}>
                             <Typography fontSize={12} color="gray" style={{ marginBottom: 5 }}>Default Columns are pre-selected already.</Typography>
                             <Select
                               closeMenuOnSelect={false}
@@ -392,14 +493,16 @@ export default function App() {
                               onChange={(value) => { setSelectedOptions(value) }}
 
                             />
-                            <Button onClick={() => setSaved(true)} color="primary" variant='outlined' style={{ marginTop: 30 }}>Save Selection</Button>
-                          </>
+                            <Button onClick={() => setTableValues()} color="primary" variant='outlined' style={{ marginTop: 30 }}>Save Selection</Button>
+                          </Box>
                       }
 
                       {
                         saved ?
                           <Box style={{ margin: 30 }}>
-                            <StickyHeadTable />
+                            <Typography variant='h5' align='center' fontWeight={800} style={{ marginTop: 50, marginBottom: 50 }}> Data Specification</Typography>
+                            <StickyHeadTable rows={stickyTableData} onDataChange={handleTableDataChange} />
+                            <LoadingButton loading={sending} onClick={() => sendData()} variant='contained' color='primary' style={{ marginTop: 30 }} >Send Data</LoadingButton>
 
                           </Box>
                           :

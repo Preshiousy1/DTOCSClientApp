@@ -8,13 +8,14 @@ import TableHead from '@mui/material/TableHead';
 import TablePagination from '@mui/material/TablePagination';
 import TableRow from '@mui/material/TableRow';
 import { Select, TextField, MenuItem } from '@mui/material';
+import { datePickerValueManager } from '@mui/x-date-pickers/DatePicker/shared';
 
 const columns = [
-    { id: 'name', label: 'Current Column Name', minWidth: 170 },
-    { id: 'rename', label: 'Rename Column', minWidth: 100 },
+    { id: 'name', label: 'Current Column Name', minWidth: 100, align: 'right' },
+    { id: 'rename', label: 'Rename Column', minWidth: 200 },
     {
         id: 'datatype',
-        label: 'Select Datatype',
+        label: 'Select Datatype', minWidth: 200
     }
 ];
 
@@ -22,25 +23,27 @@ function createData(name, rename, datatype, size) {
     return { name, rename, datatype };
 }
 
-const rows = [
-    createData('India', 'IN', 1324171354, 3287263),
-    createData('China', 'CN', 1403500365, 9596961),
-    createData('Italy', 'IT', 60483973, 301340),
-    createData('United States', 'US', 327167434, 9833520),
-    createData('Canada', 'CA', 37602103, 9984670),
-    createData('Australia', 'AU', 25475400, 7692024),
-    createData('Germany', 'DE', 83019200, 357578),
-    createData('Ireland', 'IE', 4857000, 70273),
-    createData('Mexico', 'MX', 126577691, 1972550),
-    createData('Japan', 'JP', 126317000, 377973),
-    createData('France', 'FR', 67022000, 640679),
-    createData('United Kingdom', 'GB', 67545757, 242495),
-    createData('Russia', 'RU', 146793744, 17098246),
-    createData('Nigeria', 'NG', 200962417, 923768),
-    createData('Brazil', 'BR', 210147125, 8515767),
-];
+// const rows = [
+//     createData('India', 'IN', 1324171354, 3287263),
+//     createData('China', 'CN', 1403500365, 9596961),
+//     createData('Italy', 'IT', 60483973, 301340),
+//     createData('United States', 'US', 327167434, 9833520),
+//     createData('Canada', 'CA', 37602103, 9984670),
+//     createData('Australia', 'AU', 25475400, 7692024),
+//     createData('Germany', 'DE', 83019200, 357578),
+//     createData('Ireland', 'IE', 4857000, 70273),
+//     createData('Mexico', 'MX', 126577691, 1972550),
+//     createData('Japan', 'JP', 126317000, 377973),
+//     createData('France', 'FR', 67022000, 640679),
+//     createData('United Kingdom', 'GB', 67545757, 242495),
+//     createData('Russia', 'RU', 146793744, 17098246),
+//     createData('Nigeria', 'NG', 200962417, 923768),
+//     createData('Brazil', 'BR', 210147125, 8515767),
+// ];
 
-export default function StickyHeadTable() {
+export default function StickyHeadTable({ rows, onDataChange }) {
+
+    console.log("Data Change Function : ", onDataChange)
     const [page, setPage] = React.useState(0);
     const [rowsPerPage, setRowsPerPage] = React.useState(10);
 
@@ -57,13 +60,13 @@ export default function StickyHeadTable() {
         <Paper sx={{ width: '100%', overflow: 'hidden' }}>
             <TableContainer sx={{ maxHeight: 700 }}>
                 <Table stickyHeader aria-label="sticky table">
-                    <TableHead>
+                    <TableHead style={{ backgroundColor: 'primary', fontWeight: 'bold' }}>
                         <TableRow>
                             {columns.map((column) => (
                                 <TableCell
                                     key={column.id}
                                     align={column.align}
-                                    style={{ minWidth: column.minWidth }}
+                                    style={{ minWidth: column.minWidth, fontWeight: 800, backgroundColor: 'darkgray' }}
                                 >
                                     {column.label}
                                 </TableCell>
@@ -73,7 +76,7 @@ export default function StickyHeadTable() {
                     <TableBody>
                         {rows
                             .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                            .map((row) => {
+                            .map((row, rindex) => {
                                 return (
                                     <TableRow hover role="checkbox" tabIndex={-1} key={row.code}>
                                         {columns.map((column) => {
@@ -84,7 +87,8 @@ export default function StickyHeadTable() {
                                                         <TextField
                                                             value={value}
 
-                                                            defaultValue={value}
+                                                            onChange={(event) => { let newdata = { ...row, rename: event.target.value }; console.log(newdata); onDataChange(newdata, rindex) }}
+
 
                                                             variant="filled"
                                                             size='small'
@@ -95,14 +99,14 @@ export default function StickyHeadTable() {
                                                             <Select
                                                                 labelId="demo-simple-select-label"
                                                                 id="demo-simple-select"
-                                                                // value={age}
+                                                                value={value}
                                                                 label="Datatype"
                                                                 style={{ height: 40, minWidth: 100 }}
-                                                            // onChange={handleChange}
+                                                                onChange={(event) => { onDataChange({ ...row, datatype: event.target.value }, rindex) }}
                                                             >
-                                                                <MenuItem value={'string'}>String</MenuItem>
+                                                                <MenuItem value={'str'}>String</MenuItem>
                                                                 <MenuItem value={'float'}>Float</MenuItem>
-                                                                <MenuItem value={'int'}>Integer</MenuItem>
+
                                                             </Select>
 
                                                             :
