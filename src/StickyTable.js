@@ -43,7 +43,7 @@ function createData(name, rename, datatype, size) {
 
 export default function StickyHeadTable({ rows, onDataChange }) {
 
-    console.log("Data Change Function : ", onDataChange)
+    // console.log("Data Change Function : ", onDataChange)
     const [page, setPage] = React.useState(0);
     const [rowsPerPage, setRowsPerPage] = React.useState(10);
 
@@ -75,10 +75,11 @@ export default function StickyHeadTable({ rows, onDataChange }) {
                     </TableHead>
                     <TableBody>
                         {rows
+
                             .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                             .map((row, rindex) => {
                                 return (
-                                    <TableRow hover role="checkbox" tabIndex={-1} key={row.code}>
+                                    <TableRow hover role="checkbox" tabIndex={-1} key={rindex}>
                                         {columns.map((column) => {
                                             const value = row[column.id];
                                             return (
@@ -87,7 +88,7 @@ export default function StickyHeadTable({ rows, onDataChange }) {
                                                         <TextField
                                                             value={value}
 
-                                                            onChange={(event) => { let newdata = { ...row, rename: event.target.value }; console.log(newdata); onDataChange(newdata, rindex) }}
+                                                            onChange={(event) => { let newdata = { ...row, rename: event.target.value }; console.log(newdata); onDataChange(newdata, page * rowsPerPage + rindex) }}
 
 
                                                             variant="filled"
@@ -100,10 +101,11 @@ export default function StickyHeadTable({ rows, onDataChange }) {
                                                                 labelId="demo-simple-select-label"
                                                                 id="demo-simple-select"
                                                                 value={value}
-                                                                label="Datatype"
+
                                                                 style={{ height: 40, minWidth: 100 }}
-                                                                onChange={(event) => { onDataChange({ ...row, datatype: event.target.value }, rindex) }}
+                                                                onChange={(event) => { let newdata = { ...row, datatype: event.target.value }; console.log(newdata); onDataChange(newdata, page * rowsPerPage + rindex) }}
                                                             >
+                                                                <MenuItem value={''}>--Select--</MenuItem>
                                                                 <MenuItem value={'str'}>String</MenuItem>
                                                                 <MenuItem value={'float'}>Float</MenuItem>
 

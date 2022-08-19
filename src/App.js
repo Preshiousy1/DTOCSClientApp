@@ -227,16 +227,22 @@ export default function App() {
   };
 
   const setTableValues = () => {
+
+    console.log("Here")
     const tableData = []
     const cols = []
+    if (selectedoptions.length == 0) {
+      window.alert("Please make selections first")
+    }
     selectedoptions.forEach((col, index) => {
 
-      tableData.push({ name: col.value, rename: defaultRenames[col.value] || '', datatype: defaultDatatypes[col.value] })
+      tableData.push({ name: col.value, rename: defaultRenames[col.value] || col.value, datatype: defaultDatatypes[col.value] || '' })
       cols.push(col.value)
     })
 
     setStickyTableData(tableData)
     setColumns(cols)
+    setSaved(true)
   }
 
   const sendData = () => {
@@ -287,10 +293,10 @@ export default function App() {
 
   }
 
-  useEffect(() => {
-    if (stickyTableData.length > 0)
-      setSaved(true)
-  }, [stickyTableData])
+  // useEffect(() => {
+  //   if (stickyTableData.length > 0)
+  //     setSaved(true)
+  // }, [stickyTableData])
 
   const handleTableDataChange = (data, index) => {
     let newTableData = [...stickyTableData]
