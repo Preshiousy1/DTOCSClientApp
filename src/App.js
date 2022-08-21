@@ -58,8 +58,10 @@ export default function App() {
   const [processing, setProcessing] = useState(false)
   const [sending, setSending] = useState(false)
   const [alert, setAlert] = useState(null)
+  const [alert2, setAlert2] = useState(null)
   const [fileDestination, setfileDestination] = useState("")
   const [file, setFile] = useState(null)
+  const [downloadFiles, setDownloadFiles] = useState(null)
 
   // This state will store the parsed data
   const [coldata, setData] = useState([]);
@@ -73,6 +75,7 @@ export default function App() {
 
   const [stickyTableData, setStickyTableData] = useState([])
   const [columns, setColumns] = useState([])
+
 
   const handleDateChange = (newValue) => {
     setDate(newValue);
@@ -190,7 +193,6 @@ export default function App() {
       .then(res => res.json())
       .then(response => {
 
-        console.log("Response : ", response)
         setLoading(false)
 
         if (response.status == "success") {
@@ -233,10 +235,11 @@ export default function App() {
     const cols = []
     if (selectedoptions.length == 0) {
       window.alert("Please make selections first")
+      return;
     }
     selectedoptions.forEach((col, index) => {
 
-      tableData.push({ name: col.value, rename: defaultRenames[col.value] || col.value, datatype: defaultDatatypes[col.value] || '' })
+      tableData.push({ name: col.value, rename: defaultRenames[col.value] || '', datatype: defaultDatatypes[col.value] || '' })
       cols.push(col.value)
     })
 
@@ -260,8 +263,6 @@ export default function App() {
       colToRename[data.name] = data.rename
     })
 
-    window.alert("Coming Soon")
-    return
 
     fetch(
       '/send_data',
@@ -287,9 +288,15 @@ export default function App() {
         console.log("Response : ", response)
         setSending(false)
 
+        if (response.status == "success") {
+          setAlert2(true)
+          setDownloadFiles(response.files)
+        } else {
+          setAlert2(false)
+        }
 
       })
-      .catch(error => { console.log(error); setSending(false); });
+      .catch(error => { console.log(error); setSending(false); setAlert2(false); });
 
   }
 
@@ -509,10 +516,50 @@ export default function App() {
                             <Typography variant='h5' align='center' fontWeight={800} style={{ marginTop: 50, marginBottom: 50 }}> Data Specification</Typography>
                             <StickyHeadTable rows={stickyTableData} onDataChange={handleTableDataChange} />
                             <LoadingButton loading={sending} onClick={() => sendData()} variant='contained' color='primary' style={{ marginTop: 30 }} >Send Data</LoadingButton>
+                            <Box margin={3}>
 
+
+                              {
+                                (alert2 == false) ?
+                                  <Alert severity="error">There was an error, please try again</Alert>
+                                  :
+                                  alert2 == true ?
+                                    <Alert severity="success">Your data was processed successfully! You can download the outputs.</Alert>
+                                    :
+                                    ""
+                              }
+
+                            </Box>
                           </Box>
                           :
                           ""}
+
+                      <hr color='primary' />
+                      <Typography variant="h5" align='center' fontWeight={800} style={{ marginTop: 50, marginBottom: 50 }}>
+                        Data Output
+                      </Typography>
+
+                      {
+                        downloadFiles ?
+                          <Box>
+                            <Typography> Click to download each output file</Typography>
+
+                            {
+                              downloadFiles.map((downloadFile, index) => {
+                                const filenameArray = downloadFile.split('/')
+                                const filename = filenameArray[filenameArray.length - 1]
+                                const base_url = process.env.NODE_ENV !== 'production' ? 'http://localhost:5000' : ''
+                                return (
+                                  <p key={index}>
+                                    <Button variant='text' color='primary' href={`${base_url}/download_file?location=${downloadFile}`}>{filename}</Button>
+                                  </p>
+                                )
+                              })
+                            }
+                          </Box>
+                          :
+                          ""
+                      }
                     </div>
                 }
               </Box>

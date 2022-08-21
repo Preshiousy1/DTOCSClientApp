@@ -7,7 +7,7 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TablePagination from '@mui/material/TablePagination';
 import TableRow from '@mui/material/TableRow';
-import { Select, TextField, MenuItem } from '@mui/material';
+import { Select, TextField, MenuItem, Alert } from '@mui/material';
 import { datePickerValueManager } from '@mui/x-date-pickers/DatePicker/shared';
 
 const columns = [
@@ -58,6 +58,7 @@ export default function StickyHeadTable({ rows, onDataChange }) {
 
     return (
         <Paper sx={{ width: '100%', overflow: 'hidden' }}>
+            <Alert style={{ margin: 20 }} severity="warning">Make sure to scroll across table pages and set appropriate names and datatypes to ALL EMPTY columns</Alert>
             <TableContainer sx={{ maxHeight: 700 }}>
                 <Table stickyHeader aria-label="sticky table">
                     <TableHead style={{ backgroundColor: 'primary', fontWeight: 'bold' }}>
