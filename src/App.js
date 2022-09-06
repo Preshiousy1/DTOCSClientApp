@@ -68,8 +68,17 @@ export default function App() {
   const [error, setError] = useState("");
 
   const [options, setOptions] = useState([])
+  const [options2, setOptions2] = useState([])
+  const [options3, setOptions3] = useState([])
+
   const [defaultoptions, setDefaultOptions] = useState([])
+  const [defaultoptions2, setDefaultOptions2] = useState([])
+  const [defaultoptions3, setDefaultOptions3] = useState([])
+
   const [selectedoptions, setSelectedOptions] = useState([])
+  const [selectedoptions2, setSelectedOptions2] = useState([])
+  const [selectedoptions3, setSelectedOptions3] = useState([])
+
   const [saved, setSaved] = useState(false)
   const { control, handleSubmit } = useForm();
 
@@ -88,11 +97,45 @@ export default function App() {
     setDays(event)
   }
 
+  // const defaultColumns = [
+  //   'ID',
+  //   'Duration hours',
+  //   'GANANCIA TOTAL ($)',
+  //   'Start',
+  //   'DESARROLLO (m) BASAL',
+  //   'DESARROLLO (m) ESTERIL',
+  //   'DESARROLLO (m) RAMPA',
+  //   'LVL_BACKFILL',
+  //   'LVL_DEVELOPMENT (m)',
+  //   'LVL_EXTRACCION_MINERAL (Tn)',
+  //   'DE METROS PERFORADOS (m)',
+  //   'Predecessor details',
+  //   'Finish',
+  //   'Rate',
+  //   'NIVEL',
+  //   'SOT_ACT_TYPE',
+  //   'ID_LABOR',
+  //   'Driving property',
+  //   'RESBIN',
+  //   'Resources'
+
+  // ]
+
   const defaultColumns = [
     'ID',
     'Duration hours',
     'GANANCIA TOTAL ($)',
     'Start',
+    'Predecessor details',
+    'Finish',
+    'Rate',
+    'ID_LABOR',
+    'Driving property',
+    'Resources'
+
+  ]
+
+  const resourceColumns = [
     'DESARROLLO (m) BASAL',
     'DESARROLLO (m) ESTERIL',
     'DESARROLLO (m) RAMPA',
@@ -100,16 +143,12 @@ export default function App() {
     'LVL_DEVELOPMENT (m)',
     'LVL_EXTRACCION_MINERAL (Tn)',
     'DE METROS PERFORADOS (m)',
-    'Predecessor details',
-    'Finish',
-    'Rate',
     'NIVEL',
-    'SOT_ACT_TYPE',
-    'ID_LABOR',
-    'Driving property',
     'RESBIN',
-    'Resources'
+  ]
 
+  const activityColumns = [
+    'SOT_ACT_TYPE',
   ]
 
   const defaultRenames = {
@@ -233,14 +272,28 @@ export default function App() {
     console.log("Here")
     const tableData = []
     const cols = []
-    if (selectedoptions.length == 0) {
-      window.alert("Please make selections first")
+    if (selectedoptions.length == 0 || selectedoptions2.length == 0 || selectedoptions3.length == 0) {
+      window.alert("Please make selections across all sections first")
       return;
     }
     selectedoptions.forEach((col, index) => {
 
       tableData.push({ name: col.value, rename: defaultRenames[col.value] || '', datatype: defaultDatatypes[col.value] || '' })
       cols.push(col.value)
+    })
+
+    selectedoptions2.forEach((col, index) => {
+      if (!cols.includes(col.value)) {
+        tableData.push({ name: col.value, rename: defaultRenames[col.value] || '', datatype: defaultDatatypes[col.value] || '' })
+        cols.push(col.value)
+      }
+
+    })
+    selectedoptions3.forEach((col, index) => {
+      if (!cols.includes(col.value)) {
+        tableData.push({ name: col.value, rename: defaultRenames[col.value] || '', datatype: defaultDatatypes[col.value] || '' })
+        cols.push(col.value)
+      }
     })
 
     setStickyTableData(tableData)
@@ -332,19 +385,53 @@ export default function App() {
       setProcessing(true)
 
       const obj = [];
-      const defaults = [];
-      coldata.forEach((element, index) => {
-        obj.push({ value: element, label: element })
+      const obj2 = [];
+      const obj3 = [];
 
-        if (defaultColumns.includes(element)) {
+      const defaults = [];
+      const defaults2 = [];
+      const defaults3 = [];
+
+      coldata.forEach((element, index) => {
+        if (!resourceColumns.includes(element) && !activityColumns.includes(element) && defaultColumns.includes(element)) {
+          obj.push({ value: element, label: element })
           defaults.push({ value: element, label: element })
         }
+        else if (!defaultColumns.includes(element) && !activityColumns.includes(element) && resourceColumns.includes(element)) {
+          obj2.push({ value: element, label: element })
+          defaults2.push({ value: element, label: element })
+        }
+        else if (!resourceColumns.includes(element) && !defaultColumns.includes(element) && activityColumns.includes(element)) {
+          obj3.push({ value: element, label: element })
+          defaults3.push({ value: element, label: element })
+        }
+        else if (!resourceColumns.includes(element) && !defaultColumns.includes(element) && !activityColumns.includes(element)) {
+          obj.push({ value: element, label: element })
+          obj2.push({ value: element, label: element })
+          obj3.push({ value: element, label: element })
+        }
+
+
+        // if (defaultColumns.includes(element)) {
+        //   defaults.push({ value: element, label: element })
+        // }
+        // if (resourceColumns.includes(element)) {
+        //   defaults2.push({ value: element, label: element })
+        // }
+        // if (activityColumns.includes(element)) {
+        //   defaults3.push({ value: element, label: element })
+        // }
       })
-      console.log("Object : ", obj)
+
       setDefaultOptions(defaults)
+      setDefaultOptions2(defaults2)
+      setDefaultOptions3(defaults3)
 
       setTimeout(() => {
         setOptions(obj)
+        setOptions2(obj2)
+        setOptions3(obj3)
+
         setProcessing(false)
         setAlert(null)
 
@@ -354,13 +441,65 @@ export default function App() {
 
   }, [coldata])
 
-  useEffect(() => {
-    console.log("Selected: ", selectedoptions)
-  }, [selectedoptions])
+  function searchArray(array, key, value) {
+    let obj = array.findIndex(o => o[key] === value);
+    console.log(obj);
+    return obj
+  }
 
   useEffect(() => {
-    console.log("Defaults", defaultoptions)
-  }, [defaultoptions])
+
+    let newOption = [...options]
+    let newOption2 = [...options2]
+    let newOption3 = [...options3]
+
+    selectedoptions.forEach((col, index) => {
+      let op2 = searchArray(options2, 'value', col.value)
+      let op3 = searchArray(options3, 'value', col.value)
+
+      if (op2 != -1) {
+        newOption2.splice(op2, 1)
+        setOptions2(newOption2)
+      }
+
+      if (op3 != -1) {
+        newOption3.splice(op3, 1)
+        setOptions3(newOption3)
+      }
+    })
+
+    selectedoptions2.forEach((col, index) => {
+      let op = searchArray(options, 'value', col.value)
+      let op3 = searchArray(options3, 'value', col.value)
+
+      if (op != -1) {
+        newOption.splice(op, 1)
+        setOptions(newOption)
+      }
+
+      if (op3 != -1) {
+        newOption3.splice(op3, 1)
+        setOptions3(newOption3)
+      }
+    })
+
+    selectedoptions3.forEach((col, index) => {
+      let op = searchArray(options, 'value', col.value)
+      let op2 = searchArray(options2, 'value', col.value)
+
+      if (op != -1) {
+        newOption.splice(op, 1)
+        setOptions(newOption)
+      }
+
+      if (op2 != -1) {
+        newOption2.splice(op2, 1)
+        setOptions2(newOption2)
+      }
+    })
+
+  }, [selectedoptions, selectedoptions2, selectedoptions3])
+
 
   const animatedComponents = makeAnimated();
 
@@ -494,8 +633,9 @@ export default function App() {
                       {error ? error :
                         options.length < 1 ?
                           ""
-                          : <Box style={{ margin: 30 }}>
-                            <Typography fontSize={12} color="gray" style={{ marginBottom: 5 }}>Default Columns are pre-selected already.</Typography>
+                          : <><Box style={{ margin: 30 }}>
+                            <Typography style={{ marginBottom: 10 }}>Add <strong><em>Default Column</em></strong> types here</Typography>
+                            <Typography fontSize={12} color="gray" style={{ marginBottom: 5 }}>The default Default Columns are pre-selected already.</Typography>
                             <Select
                               closeMenuOnSelect={false}
                               components={animatedComponents}
@@ -506,13 +646,54 @@ export default function App() {
                               onChange={(value) => { setSelectedOptions(value) }}
 
                             />
-                            <Button onClick={() => setTableValues()} color="primary" variant='outlined' style={{ marginTop: 30 }}>Save Selection</Button>
                           </Box>
+
+                            {
+                              options2.length < 1 ?
+                                ""
+                                : <Box style={{ margin: 30, marginTop: 60 }}>
+                                  <Typography style={{ marginBottom: 10 }}>Add <strong><em>Resource Column</em></strong> types here</Typography>
+
+                                  <Typography fontSize={12} color="gray" style={{ marginBottom: 5 }}>The default Resource Columns are pre-selected already.</Typography>
+                                  <Select
+                                    closeMenuOnSelect={false}
+                                    components={animatedComponents}
+                                    defaultValue={defaultoptions2}
+                                    isMulti
+                                    isDisabled={coldata.length < 1}
+                                    options={options2}
+                                    onChange={(value) => { setSelectedOptions2(value) }}
+
+                                  />
+                                </Box>
+                            }
+                            {
+                              options3.length < 1 ?
+                                ""
+                                : <Box style={{ margin: 30, marginTop: 60 }}>
+                                  <Typography style={{ marginBottom: 10 }}>Add <strong><em>Activity Column</em></strong> types here</Typography>
+
+                                  <Typography fontSize={12} color="gray" style={{ marginBottom: 5 }}>The default Activity Columns are pre-selected already.</Typography>
+                                  <Select
+                                    closeMenuOnSelect={false}
+                                    components={animatedComponents}
+                                    defaultValue={defaultoptions3}
+                                    isMulti
+                                    isDisabled={coldata.length < 1}
+                                    options={options3}
+                                    onChange={(value) => { setSelectedOptions3(value) }}
+
+                                  />
+                                  <Button onClick={() => setTableValues()} color="primary" variant='outlined' style={{ marginTop: 30 }}>Save Selection</Button>
+                                </Box>
+                            }
+                          </>
                       }
 
                       {
                         saved ?
                           <Box style={{ margin: 30 }}>
+
                             <Typography variant='h5' align='center' fontWeight={800} style={{ marginTop: 50, marginBottom: 50 }}> Data Specification</Typography>
                             <StickyHeadTable rows={stickyTableData} onDataChange={handleTableDataChange} />
                             <LoadingButton loading={sending} onClick={() => sendData()} variant='contained' color='primary' style={{ marginTop: 30 }} >Send Data</LoadingButton>
@@ -546,7 +727,8 @@ export default function App() {
 
                             {
                               downloadFiles.map((downloadFile, index) => {
-                                const filenameArray = downloadFile.split('/')
+                                const rename = downloadFile.replaceAll('\\', '/')
+                                const filenameArray = rename.split('/')
                                 const filename = filenameArray[filenameArray.length - 1]
                                 const base_url = process.env.NODE_ENV !== 'production' ? 'http://localhost:5000' : ''
                                 return (
