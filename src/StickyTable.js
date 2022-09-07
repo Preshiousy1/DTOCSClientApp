@@ -11,6 +11,7 @@ import { Select, TextField, MenuItem, Alert } from '@mui/material';
 import { datePickerValueManager } from '@mui/x-date-pickers/DatePicker/shared';
 
 const columns = [
+    { id: 'type', label: 'Column Type', minWidth: 100 },
     { id: 'name', label: 'Current Column Name', minWidth: 100, align: 'right' },
     { id: 'rename', label: 'Rename Column', minWidth: 200 },
     {
@@ -19,8 +20,8 @@ const columns = [
     }
 ];
 
-function createData(name, rename, datatype, size) {
-    return { name, rename, datatype };
+function createData(type, name, rename, datatype, size) {
+    return { type, name, rename, datatype };
 }
 
 // const rows = [

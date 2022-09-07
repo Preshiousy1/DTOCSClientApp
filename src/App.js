@@ -278,20 +278,20 @@ export default function App() {
     }
     selectedoptions.forEach((col, index) => {
 
-      tableData.push({ name: col.value, rename: defaultRenames[col.value] || '', datatype: defaultDatatypes[col.value] || '' })
+      tableData.push({ type: "Default Columns", name: col.value, rename: defaultRenames[col.value] || '', datatype: defaultDatatypes[col.value] || '' })
       cols.push(col.value)
     })
 
     selectedoptions2.forEach((col, index) => {
       if (!cols.includes(col.value)) {
-        tableData.push({ name: col.value, rename: defaultRenames[col.value] || '', datatype: defaultDatatypes[col.value] || '' })
+        tableData.push({ type: "Resource Columns", name: col.value, rename: defaultRenames[col.value] || '', datatype: defaultDatatypes[col.value] || '' })
         cols.push(col.value)
       }
 
     })
     selectedoptions3.forEach((col, index) => {
       if (!cols.includes(col.value)) {
-        tableData.push({ name: col.value, rename: defaultRenames[col.value] || '', datatype: defaultDatatypes[col.value] || '' })
+        tableData.push({ type: "Activity Columns", name: col.value, rename: defaultRenames[col.value] || '', datatype: defaultDatatypes[col.value] || '' })
         cols.push(col.value)
       }
     })
