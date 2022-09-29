@@ -124,34 +124,34 @@ export default function App() {
   const defaultColumns = [
     'ID',
     'Duration hours',
-    // 'GANANCIA TOTAL ($)',
+    'GANANCIA TOTAL ($)',
     'Start',
     'Predecessor details',
     'Finish',
     'Rate',
+    'ID_LABOR',
     'Driving property',
-    'Resources',
-
-
-    // 'DESARROLLO (m) BASAL',
-    // 'DESARROLLO (m) ESTERIL',
-    // 'DESARROLLO (m) RAMPA',
-    // 'SOT_ACT_TYPE',
-    // 'NIVEL',
-    // 'RESBIN',
-    // 'ID_LABOR',
-    // 'LVL_BACKFILL',
-    // 'LVL_DEVELOPMENT (m)',
-    // 'LVL_EXTRACCION_MINERAL (Tn)',
-    // 'DE METROS PERFORADOS (m)',
-    // 'GANANCIA TOTAL ($)'
-
+    'Resources'
 
   ]
 
+  const resourceColumns = [
+    'DESARROLLO (m) BASAL',
+    'DESARROLLO (m) ESTERIL',
+    'DESARROLLO (m) RAMPA',
+    'LVL_BACKFILL',
+    'LVL_DEVELOPMENT (m)',
+    'LVL_EXTRACCION_MINERAL (Tn)',
+    'DE METROS PERFORADOS (m)',
+    'NIVEL',
+    'RESBIN',
+  ]
+
+  const activityColumns = [
+    'SOT_ACT_TYPE',
+  ]
 
   const defaultRenames = {
-    'ID': 'id',
     'Duration hours': "duration",
     'GANANCIA TOTAL ($)': "profit",
     'DESARROLLO (m) BASAL': "prim_dev",
@@ -269,16 +269,32 @@ export default function App() {
 
   const setTableValues = () => {
 
+    console.log("Here")
     const tableData = []
     const cols = []
-
+    if (selectedoptions.length == 0 || selectedoptions2.length == 0 || selectedoptions3.length == 0) {
+      window.alert("Please make selections across all sections first")
+      return;
+    }
     selectedoptions.forEach((col, index) => {
 
-      tableData.push({ type: "Default Column", name: col.value, rename: defaultRenames[col.value] || '', datatype: defaultDatatypes[col.value] || '' })
+      tableData.push({ type: "Default Columns", name: col.value, rename: defaultRenames[col.value] || '', datatype: defaultDatatypes[col.value] || '' })
       cols.push(col.value)
     })
 
+    selectedoptions2.forEach((col, index) => {
+      if (!cols.includes(col.value)) {
+        tableData.push({ type: "Resource Columns", name: col.value, rename: defaultRenames[col.value] || '', datatype: defaultDatatypes[col.value] || '' })
+        cols.push(col.value)
+      }
 
+    })
+    selectedoptions3.forEach((col, index) => {
+      if (!cols.includes(col.value)) {
+        tableData.push({ type: "Activity Columns", name: col.value, rename: defaultRenames[col.value] || '', datatype: defaultDatatypes[col.value] || '' })
+        cols.push(col.value)
+      }
+    })
 
     setStickyTableData(tableData)
     setColumns(cols)
@@ -286,11 +302,8 @@ export default function App() {
   }
 
   const sendData = () => {
-    console.log("table Data", stickyTableData)
-    // return
     const colToDatatype = {}
     const colToRename = {}
-    const cols = []
     if (dateString == '' || days < 1) {
       window.alert("Please set a schedule first")
       return;
@@ -299,18 +312,8 @@ export default function App() {
     setSending(true)
 
     stickyTableData.forEach((data, index) => {
-      let name;
-      if (data.type == "Default Column") {
-        name = data.name
-
-      }
-      else {
-        name = data.name.value
-
-      }
-      colToDatatype[name] = data.datatype
-      colToRename[name] = data.rename
-      cols.push(name)
+      colToDatatype[data.name] = data.datatype
+      colToRename[data.name] = data.rename
     })
 
 
@@ -324,7 +327,7 @@ export default function App() {
         body: JSON.stringify({
           rename: colToRename,
           datatype: colToDatatype,
-          columns: cols,
+          columns: columns,
           date: dateString,
           days: days,
           destination: fileDestination
@@ -377,28 +380,58 @@ export default function App() {
 
   useEffect(() => {
 
+    console.log("Col data :", coldata)
     if (coldata.length > 0) {
       setProcessing(true)
 
       const obj = [];
-      const tableData = [];
+      const obj2 = [];
+      const obj3 = [];
 
+      const defaults = [];
+      const defaults2 = [];
+      const defaults3 = [];
 
       coldata.forEach((element, index) => {
-        if (defaultColumns.includes(element)) {
-          tableData.push({ sn: '', remove: '', type: "Default Column", name: element, rename: defaultRenames[element] || '', datatype: defaultDatatypes[element] || '' })
-
-
-        }
-        else {
+        if (!resourceColumns.includes(element) && !activityColumns.includes(element) && defaultColumns.includes(element)) {
           obj.push({ value: element, label: element })
-
+          defaults.push({ value: element, label: element })
         }
+        else if (!defaultColumns.includes(element) && !activityColumns.includes(element) && resourceColumns.includes(element)) {
+          obj2.push({ value: element, label: element })
+          defaults2.push({ value: element, label: element })
+        }
+        else if (!resourceColumns.includes(element) && !defaultColumns.includes(element) && activityColumns.includes(element)) {
+          obj3.push({ value: element, label: element })
+          defaults3.push({ value: element, label: element })
+        }
+        else if (!resourceColumns.includes(element) && !defaultColumns.includes(element) && !activityColumns.includes(element)) {
+          obj.push({ value: element, label: element })
+          obj2.push({ value: element, label: element })
+          obj3.push({ value: element, label: element })
+        }
+
+
+        // if (defaultColumns.includes(element)) {
+        //   defaults.push({ value: element, label: element })
+        // }
+        // if (resourceColumns.includes(element)) {
+        //   defaults2.push({ value: element, label: element })
+        // }
+        // if (activityColumns.includes(element)) {
+        //   defaults3.push({ value: element, label: element })
+        // }
       })
-      setStickyTableData(tableData)
-      setOptions(obj)
+
+      setDefaultOptions(defaults)
+      setDefaultOptions2(defaults2)
+      setDefaultOptions3(defaults3)
 
       setTimeout(() => {
+        setOptions(obj)
+        setOptions2(obj2)
+        setOptions3(obj3)
+
         setProcessing(false)
         setAlert(null)
 
@@ -592,20 +625,79 @@ export default function App() {
                     <Typography>Processing Data...</Typography>
                     :
                     <div >
-
+                      <hr color='primary' />
+                      <Typography variant="h5" align='center' fontWeight={800} style={{ marginTop: 50, marginBottom: 50 }}>
+                        Data Filtering
+                      </Typography>
 
                       {error ? error :
                         options.length < 1 ?
                           ""
                           :
+                          <>
+                            <Box style={{ margin: 30 }}>
+                              <Typography style={{ marginBottom: 10 }}>Add <strong><em>Default Column</em></strong> types here</Typography>
+                              <Typography fontSize={12} color="gray" style={{ marginBottom: 5 }}>The default Default Columns are pre-selected already.</Typography>
+                              <Select
+                                closeMenuOnSelect={false}
+                                components={animatedComponents}
+                                defaultValue={defaultoptions}
+                                isMulti
+                                isDisabled={coldata.length < 1}
+                                options={options}
+                                onChange={(value) => { setSelectedOptions(value) }}
 
+                              />
+                            </Box>
+
+                            {
+                              options2.length < 1 ?
+                                ""
+                                : <Box style={{ margin: 30, marginTop: 60 }}>
+                                  <Typography style={{ marginBottom: 10 }}>Add <strong><em>Resource Column</em></strong> types here</Typography>
+
+                                  <Typography fontSize={12} color="gray" style={{ marginBottom: 5 }}>The default Resource Columns are pre-selected already.</Typography>
+                                  <Select
+                                    closeMenuOnSelect={false}
+                                    components={animatedComponents}
+                                    defaultValue={defaultoptions2}
+                                    isMulti
+                                    isDisabled={coldata.length < 1}
+                                    options={options2}
+                                    onChange={(value) => { setSelectedOptions2(value) }}
+
+                                  />
+                                </Box>
+                            }
+                            {
+                              options3.length < 1 ?
+                                ""
+                                : <Box style={{ margin: 30, marginTop: 60 }}>
+                                  <Typography style={{ marginBottom: 10 }}>Add <strong><em>Activity Column</em></strong> types here</Typography>
+
+                                  <Typography fontSize={12} color="gray" style={{ marginBottom: 5 }}>The default Activity Columns are pre-selected already.</Typography>
+                                  <Select
+                                    closeMenuOnSelect={false}
+                                    components={animatedComponents}
+                                    defaultValue={defaultoptions3}
+                                    isMulti
+                                    isDisabled={coldata.length < 1}
+                                    options={options3}
+                                    onChange={(value) => { setSelectedOptions3(value) }}
+
+                                  />
+                                  <Button onClick={() => setTableValues()} color="primary" variant='outlined' style={{ marginTop: 30 }}>Save Selection</Button>
+                                </Box>
+                            }
+                          </>
+                      }
+
+                      {
+                        saved ?
                           <Box style={{ margin: 30 }}>
 
-                            <hr color='primary' />
-                            <Typography variant="h5" align='center' fontWeight={800} style={{ marginTop: 50, marginBottom: 50 }}>
-                              Data Filtering
-                            </Typography>
-                            <StickyHeadTable onDataChange={handleTableDataChange} setRows={setStickyTableData} firstoptions={options} rows={stickyTableData} />
+                            <Typography variant='h5' align='center' fontWeight={800} style={{ marginTop: 50, marginBottom: 50 }}> Data Specification</Typography>
+                            <StickyHeadTable rows={stickyTableData} onDataChange={handleTableDataChange} />
                             <LoadingButton loading={sending} onClick={() => sendData()} variant='contained' color='primary' style={{ marginTop: 30 }} >Send Data</LoadingButton>
                             <Box margin={3}>
 
@@ -622,7 +714,8 @@ export default function App() {
 
                             </Box>
                           </Box>
-                      }
+                          :
+                          ""}
 
                       <hr color='primary' />
                       <Typography variant="h5" align='center' fontWeight={800} style={{ marginTop: 50, marginBottom: 50 }}>

@@ -7,17 +7,23 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TablePagination from '@mui/material/TablePagination';
 import TableRow from '@mui/material/TableRow';
-import { Select, TextField, MenuItem, Alert } from '@mui/material';
+import { Select as OSelect, TextField, MenuItem, Alert } from '@mui/material';
+import Select from 'react-select'
+import makeAnimated from 'react-select/animated';
 import { datePickerValueManager } from '@mui/x-date-pickers/DatePicker/shared';
+import { Button, Container } from '@material-ui/core';
 
 const columns = [
-    { id: 'type', label: 'Column Type', minWidth: 100 },
+    { id: 'sn', label: '#SN', minWidth: 20 },
+    { id: 'type', label: 'Column Type', minWidth: 200 },
     { id: 'name', label: 'Current Column Name', minWidth: 100, align: 'right' },
     { id: 'rename', label: 'Rename Column', minWidth: 200 },
     {
         id: 'datatype',
-        label: 'Select Datatype', minWidth: 200
-    }
+        label: 'Select Datatype', minWidth: 100
+    },
+    { id: 'remove', label: '', minWidth: 100, align: 'right' },
+
 ];
 
 function createData(type, name, rename, datatype, size) {
@@ -42,11 +48,47 @@ function createData(type, name, rename, datatype, size) {
 //     createData('Brazil', 'BR', 210147125, 8515767),
 // ];
 
-export default function StickyHeadTable({ rows, onDataChange }) {
+export default function StickyHeadTable({ onDataChange, setRows, firstoptions, rows }) {
 
     // console.log("Data Change Function : ", onDataChange)
     const [page, setPage] = React.useState(0);
     const [rowsPerPage, setRowsPerPage] = React.useState(10);
+    const animatedComponents = makeAnimated();
+    const [options, setOptions] = React.useState(firstoptions)
+
+    // const [rows, setRows] = React.useState(defaultRows)
+
+    function searchArray(array, key, value) {
+        let obj = array.findIndex(o => o[key] === value);
+        console.log(obj);
+        return obj
+    }
+    const ColumnTypes = [
+        { value: "Resource Column", label: "Resource Column" },
+        { value: "Activity Type Column", label: "Activity Type Column" },
+        { value: "Objective Function Column", label: "Objective Function Column" },
+    ]
+
+
+    const handleAddRow = () => {
+        const item = { sn: "", type: "", name: "", rename: '', datatype: '', remove: '' };
+        const newRows = [...rows, item];
+
+        console.log("New Rows : ", newRows)
+        setRows(newRows);
+    };
+
+    const handleRemoveRow = () => {
+        setRows(rows.slice(0, -1));
+    };
+
+    const handleRemoveSpecificRow = (id) => {
+        const newRows = [...rows]
+        newRows.splice(id, 1)
+        console.log("New Rows Delete: ", newRows)
+
+        setRows(newRows)
+    }
 
     const handleChangePage = (event, newPage) => {
         setPage(newPage);
@@ -55,6 +97,29 @@ export default function StickyHeadTable({ rows, onDataChange }) {
     const handleChangeRowsPerPage = (event) => {
         setRowsPerPage(+event.target.value);
         setPage(0);
+    };
+
+    const handleChange = (id, value, name) => {
+        const newRows = [...rows];
+        newRows[id] = {
+            ...newRows[id], [name]: value
+        };
+
+        if (name == 'name') {
+
+            let newOptions = [...options]
+
+            let op = searchArray(options, 'value', value.value)
+
+            if (op != -1) {
+                newOptions.splice(op, 1)
+                setOptions(newOptions)
+            }
+        }
+
+        console.log("row", newRows[id])
+
+        setRows(newRows);
     };
 
     return (
@@ -80,50 +145,126 @@ export default function StickyHeadTable({ rows, onDataChange }) {
 
                             .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                             .map((row, rindex) => {
-                                return (
-                                    <TableRow hover role="checkbox" tabIndex={-1} key={rindex}>
-                                        {columns.map((column) => {
-                                            const value = row[column.id];
-                                            return (
-                                                <TableCell key={column.id} align={column.align}>
-                                                    {column.id == 'rename' ?
-                                                        <TextField
-                                                            value={value}
+                                const rowindex = page * rowsPerPage + rindex;
+                                if (row.type == "Default Column") {
+                                    return (
+                                        <TableRow hover role="checkbox" tabIndex={-1} key={rowindex}>
+                                            {columns.map((column) => {
+                                                const value = row[column.id];
 
-                                                            onChange={(event) => { let newdata = { ...row, rename: event.target.value }; console.log(newdata); onDataChange(newdata, page * rowsPerPage + rindex) }}
+                                                return (
+                                                    <TableCell key={column.id} align={column.align}>
+                                                        {
+                                                            column.id == 'sn' ?
+                                                                rowindex + 1
+                                                                :
+                                                                value
+                                                        }
+                                                    </TableCell>
+                                                );
+                                            })}
+                                        </TableRow>
+                                    );
+                                }
+                                else {
+                                    return (
+                                        <TableRow hover role="checkbox" tabIndex={-1} key={rowindex}>
+                                            {columns.map((column) => {
+                                                const value = row[column.id];
+                                                const name = column.id
 
+                                                return (
+                                                    <TableCell key={column.id} align={column.align}>
+                                                        {
 
-                                                            variant="filled"
-                                                            size='small'
-                                                        />
-                                                        // value
-                                                        :
-                                                        column.id == 'datatype' ?
-                                                            <Select
-                                                                labelId="demo-simple-select-label"
-                                                                id="demo-simple-select"
-                                                                value={value}
+                                                            column.id == 'rename' ?
+                                                                <TextField
+                                                                    value={value}
+                                                                    onChange={(event) => handleChange(rowindex, event.target.value, name)}
+                                                                    variant="filled"
+                                                                    size='small'
+                                                                />
+                                                                // value
+                                                                :
+                                                                column.id == 'datatype' ?
+                                                                    <OSelect
+                                                                        labelId="demo-simple-select-label"
+                                                                        id="demo-simple-select"
+                                                                        value={value}
+                                                                        style={{ height: 40, minWidth: 100 }}
+                                                                        onChange={(event) => handleChange(rowindex, event.target.value, name)}
 
-                                                                style={{ height: 40, minWidth: 100 }}
-                                                                onChange={(event) => { let newdata = { ...row, datatype: event.target.value }; console.log(newdata); onDataChange(newdata, page * rowsPerPage + rindex) }}
-                                                            >
-                                                                <MenuItem value={''}>--Select--</MenuItem>
-                                                                <MenuItem value={'str'}>String</MenuItem>
-                                                                <MenuItem value={'float'}>Float</MenuItem>
+                                                                    >
+                                                                        <MenuItem value={''}>--Select--</MenuItem>
+                                                                        <MenuItem value={'str'}>String</MenuItem>
+                                                                        <MenuItem value={'float'}>Float</MenuItem>
 
-                                                            </Select>
+                                                                    </OSelect>
 
-                                                            :
-                                                            value
-                                                    }
-                                                </TableCell>
-                                            );
-                                        })}
-                                    </TableRow>
-                                );
+                                                                    :
+                                                                    column.id == 'name' ?
+                                                                        <Select
+                                                                            key={rowindex}
+                                                                            closeMenuOnSelect={true}
+                                                                            components={animatedComponents}
+                                                                            options={options}
+                                                                            value={value}
+
+                                                                            onChange={(value) => handleChange(rowindex, value, name)}
+
+                                                                        />
+                                                                        :
+                                                                        column.id == 'remove' ?
+                                                                            <Button
+                                                                                variant='outlined'
+                                                                                color='secondary'
+                                                                                size='sm'
+                                                                                onClick={() => handleRemoveSpecificRow(rowindex)}
+                                                                            >
+                                                                                Remove
+                                                                            </Button>
+
+                                                                            :
+                                                                            column.id == 'type' ?
+                                                                                <Select
+                                                                                    key={rowindex}
+                                                                                    closeMenuOnSelect={true}
+                                                                                    components={animatedComponents}
+                                                                                    options={ColumnTypes}
+                                                                                    value={value}
+                                                                                    onChange={(value) => handleChange(rowindex, value, name)}
+
+                                                                                />
+                                                                                :
+                                                                                rowindex + 1
+                                                        }
+                                                    </TableCell>
+                                                );
+                                            })}
+                                        </TableRow>
+                                    );
+                                }
                             })}
                     </TableBody>
                 </Table>
+                <Container style={{ marginTop: 30 }}>
+                    <Button
+                        variant='contained'
+                        style={{ backgroundColor: 'green', color: 'white' }}
+                        onClick={() => handleAddRow()}>
+                        Add Entry
+                    </Button>
+                    <Button
+                        variant='contained'
+                        color='secondary'
+                        style={{ float: 'right' }}
+                        onClick={() => handleRemoveRow()}
+                        className="float-right"
+                    >
+                        Delete Last Entry
+                    </Button>
+                </Container>
+
             </TableContainer>
             <TablePagination
                 rowsPerPageOptions={[10, 25, 100]}
